@@ -1,4 +1,4 @@
-"""<div align="center">
+<div align="center">
   <!-- Status & License Badges -->
   <img src="https://img.shields.io/badge/Status-Production_Ready-success.svg?style=for-the-badge" alt="Status">
   <img src="https://img.shields.io/badge/Deployed-Railway.app-0B0D0E?style=for-the-badge&logo=railway&logoColor=white" alt="Railway">
