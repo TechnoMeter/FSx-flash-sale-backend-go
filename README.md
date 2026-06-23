@@ -298,7 +298,7 @@ The repository follows standard Go project layouts, separating business logic fr
 * **`test/integration_test.go` (Race Condition Suite):** Uses the `testing` package with a `sync.WaitGroup` to simulate 15 concurrent HTTP requests. Connects to the *real* Dockerized Redis and Postgres. Validates that the final Redis stock is `0` and only `10` requests return `200`.
 * **`scripts/load-test.js` (k6 Staged Test):** Exports a `options` object with a ramp-up, spike, and ramp-down stage. Defines thresholds for latency and error rate. Uses `__VU` (Virtual User ID) and `__ITER` (Iteration) to generate unique `user_id` strings.
 
----
+--- 
 
 ## 📂 Repository Structure
 
