@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>⚡ Flash Sale Backend</title>
+    <style>
+        body { font-family: system-ui; max-width: 600px; margin: 80px auto; text-align: center; padding: 20px; }
+        .badge { display: inline-block; background: #0B0D0E; color: white; padding: 4px 12px; border-radius: 20px; font-size: 14px; }
+        .stock { font-size: 48px; font-weight: bold; margin: 20px 0; }
+        button { background: #00ADD8; color: white; border: none; padding: 14px 40px; font-size: 18px; border-radius: 8px; cursor: pointer; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        #result { margin-top: 20px; font-family: monospace; background: #f4f4f4; padding: 10px; border-radius: 4px; }
+        .tech { margin: 30px 0; }
+        .tech span { background: #e0e0e0; padding: 4px 12px; border-radius: 4px; margin: 0 4px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="badge">⚡ Production Ready</div>
+    <h1>Flash Sale Backend</h1>
+    <p>Atomic inventory management • Asynchronous persistence • 1,000+ RPS</p>
+    
+    <div class="tech">
+        <span>Go 1.22</span>
+        <span>PostgreSQL 15</span>
+        <span>Redis 7</span>
+    </div>
+
+    <div>
+        <div>📦 Remaining Stock</div>
+        <div class="stock" id="stockDisplay">--</div>
+    </div>
+
+    <button id="buyBtn" onclick="reserve()">🔥 Reserve One</button>
+    <div id="result">Click the button to test the API</div>
+
+    <script>
+        async function fetchStock() {
+            try {
+                const res = await fetch('/reserve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_id: 1, user_id: 'demo' })
+                });
+                const data = await res.json();
+                document.getElementById('stockDisplay').textContent = data.stock !== undefined ? data.stock : 0;
+                return data;
+            } catch (e) {
+                document.getElementById('stockDisplay').textContent = '❌';
+                return null;
+            }
+        }
+
+        async function reserve() {
+            const btn = document.getElementById('buyBtn');
+            btn.disabled = true;
+            document.getElementById('result').textContent = '⏳ Processing...';
+            
+            try {
+                const res = await fetch('/reserve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_id: 1, user_id: 'resume_demo' })
+                });
+                const data = await res.json();
+                
+                let msg = '';
+                if (res.status === 200) {
+                    msg = `✅ Success! Stock remaining: ${data.stock}`;
+                    document.getElementById('stockDisplay').textContent = data.stock;
+                } else if (res.status === 429) {
+                    msg = '❌ Sold Out! (This is a good sign – the system prevented overselling)';
+                } else {
+                    msg = `⚠️ Error: ${data.message || res.status}`;
+                }
+                document.getElementById('result').textContent = msg;
+            } catch (e) {
+                document.getElementById('result').textContent = '⚠️ Network error – try again.';
+            }
+            btn.disabled = false;
+        }
+
+        // Load initial stock
+        fetchStock();
+    </script>
+</body>
+</html>
