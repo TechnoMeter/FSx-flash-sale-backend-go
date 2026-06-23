@@ -7,7 +7,7 @@
   <br><br>
 
   <!-- Technology Badges -->
-  <img src="https://img.shields.io/badge/Go-1.22-00ADD8.svg?style=flat-square&logo=go&logoColor=white" alt="Go">
+  <img src="https://img.shields.io/badge/Go-1.25-00ADD8.svg?style=flat-square&logo=go&logoColor=white" alt="Go">
   <img src="https://img.shields.io/badge/PostgreSQL-15-4169E1.svg?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
   <img src="https://img.shields.io/badge/Redis-7.0-DC382D.svg?style=flat-square&logo=redis&logoColor=white" alt="Redis">
   <img src="https://img.shields.io/badge/k6-Load_Testing-7D64FF.svg?style=flat-square&logo=k6&logoColor=white" alt="k6">
