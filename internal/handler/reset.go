@@ -3,7 +3,7 @@ package handler
 import (
     "fmt"
     "net/http"
-    "https://github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/db"
+    "github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/db"
 )
 
 func ResetStock(rdb *db.RedisDB) http.HandlerFunc {
