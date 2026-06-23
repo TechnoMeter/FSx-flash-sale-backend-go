@@ -2,6 +2,7 @@
   <!-- Status & License Badges -->
   <img src="https://img.shields.io/badge/Status-Production_Ready-success.svg?style=for-the-badge" alt="Status">
   <img src="https://img.shields.io/badge/Deployed-Railway.app-0B0D0E?style=for-the-badge&logo=railway&logoColor=white" alt="Railway">
+  <img src="https://github.com/TechnoMeter/flash-sale-backend-go/actions/workflows/ci.yml/badge.svg" alt="CI Status">
   
   <br><br>
 
@@ -26,7 +27,21 @@
 
 This project is a fully containerized, horizontally-scalable microservice actively deployed on **Railway.app**. The infrastructure leverages Railway’s internal networking to securely connect the Go application, Redis, and PostgreSQL without exposing data layers to the public internet.
 
-👉 **[Access the Live API Health Check Here](https://your-railway-url.railway.app/health)** *(Note: The live endpoint is a REST API intended for programmatic access. Use the provided k6 script or `curl` to test the `/reserve` endpoint. The free tier instance may spin down after 15 minutes of inactivity; allow 5–10 seconds for the first cold start).*
+👉 👉 **[Access the Live API Health Check Here](https://flash-sale-backend-go-production.up.railway.app/health)**  *(Note: The live endpoint is a REST API intended for programmatic access. Use the provided k6 script or `curl` to test the `/reserve` endpoint. The free tier instance may spin down after 15 minutes of inactivity; allow 5–10 seconds for the first cold start).*
+
+---
+
+## 🔁 Continuous Integration
+
+This repository uses **GitHub Actions** to run a CI pipeline on every push and pull request to the `main` branch. The pipeline ensures that:
+
+- The code builds successfully.
+- All dependencies are up‑to‑date.
+- The unit and integration tests pass.
+
+The pipeline does **not** deploy – deployment is handled automatically by Railway when you push to the connected branch. This keeps the CI fast and focused on code quality.
+
+You can see the badge at the top of this README – it shows the current build status.
 
 ---
 
