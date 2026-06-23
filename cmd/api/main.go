@@ -100,6 +100,9 @@ func main() {
 	r.Get("/health", handler.HealthCheck)
 	r.Get("/ready", handler.ReadinessCheck(pg, rdb))
 
+	// Landing page
+	r.Get("/", handler.IndexPage)
+
 	// Metrics (Prometheus) – we'll use a simple /metrics endpoint for demo
 	r.Get("/metrics", handler.Metrics)
 
