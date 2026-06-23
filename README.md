@@ -27,7 +27,7 @@
 
 This project is a fully containerized, horizontally-scalable microservice actively deployed on **Railway.app**. The infrastructure leverages Railway’s internal networking to securely connect the Go application, Redis, and PostgreSQL without exposing data layers to the public internet.
 
-👉 👉 **[Access the Live API Health Check Here](https://flash-sale-backend-go-production.up.railway.app/health)**  *(Note: The live endpoint is a REST API intended for programmatic access. Use the provided k6 script or `curl` to test the `/reserve` endpoint. The free tier instance may spin down after 15 minutes of inactivity; allow 5–10 seconds for the first cold start).*
+👉 👉 **[Access the Live Interactive API Here](https://flash-sale-backend-go-production.up.railway.app/)**  *(Note: The live endpoint is a REST API intended for programmatic access. Use the provided k6 script or `curl` to test the `/reserve` endpoint. The free tier instance may spin down after 15 minutes of inactivity; allow 5–10 seconds for the first cold start).*
 
 ---
 
