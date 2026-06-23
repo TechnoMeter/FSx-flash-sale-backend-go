@@ -12,6 +12,9 @@ import (
 )
 
 func TestRaceCondition(t *testing.T) {
+    if testing.Short() {
+        t.Skip("skipping integration test in CI")
+    }
     // Assumes local server is running on :8080
     // We'll send 15 concurrent requests with initial stock=10
     // Expect exactly 10 success and 5 sold-out responses.
