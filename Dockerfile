@@ -20,7 +20,8 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /root/
 
 COPY --from=builder /flash-sale .
-COPY --from=builder /app/migrations ./migrations   # important: copy migrations folder
+# Copy the migrations folder so the migration runner can find it
+COPY --from=builder /app/migrations ./migrations
 
 EXPOSE 8080
 CMD ["./flash-sale"]
