@@ -131,40 +131,28 @@ flowchart TD
 
     subgraph Tier4 ["4. Data & Queue Layer"]
         direction TB
-        Redis[("Redis 7.0<br/>(Inventory Cache)")]:::redis
-        Stream[("Redis Streams<br/>(Queue)")]:::redis
+        Redis[("Redis 7.0<br/>(Inventory + Streams)")]:::redis
         Worker>"Background Worker<br/>(Consumer)"]:::worker
         PG[("PostgreSQL 15<br/>(Source of Truth)")]:::db
     end
 
-    %% Core Routing
     Client ===> LB
     LB ---> API1 & API2 & API3
 
-    %% Sync Path (Label applied only to API2 to prevent 3x overlap)
-    API1 ---> Redis
-    API2 -- "1. EVAL Lua<br/>(Atomic DECR)" ---> Redis
+    API1 -- "Atomic Lua script<br/>(DECR + XADD)" ---> Redis
+    API2 -- " (returns stock / error) " ---> Redis
     API3 ---> Redis
     
-    Redis -.- API1
-    Redis -. "2. New Stock / -2" .-> API2
-    Redis -.- API3
-    
-    %% Queue Path
-    API1 ---> Stream
-    API2 -- "3. XADD<br/>(Fire-and-Forget)" ---> Stream
-    API3 ---> Stream
-    
-    %% Async Path
-    Worker -- "4. XREADGROUP<br/>(Blocking)" ---> Stream
-    Worker -- "5. INSERT INTO<br/>orders" ---> PG
-    Worker -- "6. XACK<br/>(Acknowledge)" ---> Stream
+    Redis -.-> API1 & API2 & API3
+
+    Worker -- "XREADGROUP" ---> Redis
+    Worker -- "INSERT INTO orders" ---> PG
+    Worker -- "XACK" ---> Redis
 ```
 
 ### Critical Path Walkthrough (Sequence Diagram)
 
-```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'arial', 'actorBkg': '#ffffff', 'actorBorder': '#1565c0', 'sequenceNumberColor': '#ffffff'}}}%%
+```%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'arial', 'actorBkg': '#ffffff', 'actorBorder': '#1565c0', 'sequenceNumberColor': '#ffffff'}}}%%
 sequenceDiagram
     autonumber
     
@@ -177,8 +165,7 @@ sequenceDiagram
     end
     
     box rgb(255, 235, 238) "Cache & Queue Tier"
-        participant Redis as Redis (Inventory)
-        participant Stream as Redis Streams
+        participant Redis as Redis (Inventory + Streams)
     end
     
     box rgb(243, 229, 245) "Persistence Tier"
@@ -189,34 +176,30 @@ sequenceDiagram
     Client->>+API: POST /reserve {product, user}
     
     rect rgb(255, 243, 224)
-        %% Using 'Note over' forces horizontal padding between lifelines
-        Note over API,Redis: Step 1: Atomic Check & Decrement
-        API->>+Redis: EVAL "DECR + bound check" Lua script
-        Redis-->>-API: Returns new stock OR -2 (Sold Out)
+        Note over API,Redis: Step 1: Atomic Decrement + Queue Append (Lua)
+        API->>+Redis: EVAL "DECR + XADD" script (keys, args)
+        Redis-->>-API: Returns [stock, msg_id] OR [-2, ''] / [-1, '']
     end
     
-    alt Stock == -2 (Sold Out)
+    alt stock == -2 (Sold Out)
         API-->>Client: HTTP 429 (Too Many Requests)
-    else Stock >= 0
-        rect rgb(224, 247, 250)
-            Note over API,Stream: Step 2: Generate UUID & Queue
-            API->>+Stream: XADD sales:orders {order_id: UUID, product, user}
-            Stream-->>-API: OK (Message ID)
-        end
+    else stock == -1 (XADD failed, rollback done)
+        API-->>Client: HTTP 503 (Service Unavailable)
+    else stock >= 0
         API-->>Client: HTTP 200 {success: true, stock: X}
     end
     
     deactivate API
 
     rect rgb(232, 245, 233)
-        Note over Worker,PG: Step 3: Async Persistence (Decoupled)
+        Note over Worker,PG: Step 2: Async Persistence (Decoupled)
         loop Every 1 second
-            Worker->>+Stream: XREADGROUP (blocking, 1000ms)
-            Stream-->>-Worker: Batch of pending messages
+            Worker->>+Redis: XREADGROUP (blocking)
+            Redis-->>-Worker: Batch of pending messages
             Worker->>+PG: INSERT INTO orders (product, user)
             PG-->>-Worker: OK
-            Worker->>+Stream: XACK (acknowledge message)
-            Stream-->>-Worker: Ack Confirmed
+            Worker->>+Redis: XACK (acknowledge message)
+            Redis-->>-Worker: Ack Confirmed
         end
     end
 ```
@@ -229,15 +212,39 @@ sequenceDiagram
 We don't rely on Go's `sync.Mutex` or distributed locks (like Redlock). Instead, we push the concurrency control down to the database kernel. Redis executes the following Lua script atomically, guaranteeing that the inventory never dips below zero:
 
 ```lua
+-- KEYS[1]: inventory key (e.g. inventory:product:1)
+-- ARGV[1]: stream key (e.g. sales:orders)
+-- ARGV[2]: order JSON string
+
 local stock = redis.call('DECR', KEYS[1])
 if stock < 0 then
-    redis.call('INCR', KEYS[1])  -- Rollback to 0
-    return -2
+    redis.call('INCR', KEYS[1])
+    return {-2, ''}
 end
-return stock
+
+-- Attempt to add the order to the stream.
+local ok, msg_id = pcall(function()
+    return redis.call('XADD', ARGV[1], '*', 'order', ARGV[2])
+end)
+
+if not ok then
+    -- Rollback the decrement if XADD failed.
+    redis.call('INCR', KEYS[1])
+    return {-1, ''}
+end
+
+return {stock, msg_id}
 ```
 
-**Why this beats `GET` + `SET`:** Since Redis is single-threaded, the script runs without interruption. 1,000 concurrent requests are serialized at the Redis networking layer—no race conditions, no negative inventory.
+We no longer separate the decrement from the queue append. Instead, we execute both operations inside a single Lua script. Redis runs the script atomically, ensuring that if the `XADD` fails (e.g., due to a network hiccup), the decrement is automatically rolled back. This eliminates the window where the inventory could be decremented without the order being enqueued, preventing negative stock even under failure conditions.
+
+The script returns a tuple:
+
+`[-2, '']` → sold out (stock was 0)
+
+`[-1, '']` → stream error, rollback performed
+
+`[stock, msg_id]` → success, `stock` is the new inventory count, `msg_id` is the Redis Stream message ID.
 
 ### 2. Decoupled Persistence (Redis Streams + Worker)
 Writing to PostgreSQL synchronously would add ~50ms of latency per request, drastically reducing throughput. We use **Redis Streams** as a durable queue:
@@ -246,10 +253,10 @@ Writing to PostgreSQL synchronously would add ~50ms of latency per request, dras
 - **Consumer Groups:** The background worker belongs to the `flash-sale-workers` group. If we scale to 3 API nodes, each node spawns its own worker. Redis ensures that **each message is delivered to exactly one worker** (using `XREADGROUP`), preventing duplicate order insertions.
 - **At-Least-Once Delivery:** If the worker crashes before `XACK`, the message stays pending and is re-delivered to the next available worker on restart.
 
-### 3. Graceful Degradation & Compensation (The "Senior" Touch)
-**Failure Scenario:** Redis decrements the stock, but `XADD` fails (network partition).
-**Mitigation:** The API catches the `XADD` error, immediately calls `INCR` on the Redis key to restore the deducted stock, and returns `HTTP 503`. No phantom deductions.
-**Reconciliation Cron (Optional):** For absolute safety, a scheduled job runs every 5 minutes, querying `SELECT COUNT(*) FROM orders WHERE product_id = 1` and comparing it to `100 - GET inventory:product:1`. If mismatched, it adjusts the Redis key upward.
+### 3. Graceful Degradation & Compensation
+The compensation logic is now built into the atomic Lua script. If the `XADD` command fails (due to a transient Redis error or network partition), the script rolls back the decrement and returns `-1`. The Go handler checks this return code and responds with `HTTP 503` without any additional compensation code. There is no longer a separate INCR call in the Go layer, reducing the surface for failures.
+
+Reconciliation Cron: For absolute safety, a scheduled job runs every 5 minutes, querying `SELECT COUNT(*) FROM orders WHERE product_id = 1` and comparing it to `100 - GET inventory:product:1`. If mismatched, it adjusts the Redis key upward. The reconciler now caps the correction at 0 to prevent negative values in case of data corruption.
 
 ### 4. Stateless Horizontal Scalability
 The API nodes are entirely stateless. They do not hold WebSocket connections or in-memory session caches. This allows the deployment to scale horizontally behind a simple round-robin load balancer (provided natively by Railway). Under heavy load, we simply increase the replica count—no code changes required.
@@ -287,9 +294,11 @@ The repository follows standard Go project layouts, separating business logic fr
 
 * **`cmd/api/main.go` (Application Entrypoint):** Initializes `log/slog`, sets up graceful shutdown with context cancellation, provisions DB/Redis pools, mounts routes, and auto-starts the worker goroutine.
 * **`internal/db/redis.go` (Redis Abstraction):** Wraps the `go-redis` client. Exposes the raw `DecrLua` script variable and a `NewRedis` factory. Handles connection string parsing.
+* **`internal/db/redis.go` (Redis Abstraction):** Wraps the go-redis client. Exposes two scripts: `Decr` (legacy, kept for reference) and `AtomicReserve` – the new Lua script that combines decrement and stream append. Handles connection string parsing.
 * **`internal/db/postgres.go` (PostgreSQL Abstraction):** Wraps the `pgx` driver. Exposes a simple `InsertOrder` method. Connection pooling is configured via the `DATABASE_URL` (handled automatically by `pgx`).
 * **`internal/handler/reserve.go` (HTTP Handler):** Handles the atomic Lua decrement. Generates a unique `order_id` (UUID), pushes the JSON payload to the stream, and executes synchronous inventory rollbacks if the queue publish fails.
 * **`internal/handler/stock.go` (Stock Reader):** Exposes a `GET /stock` endpoint that returns the current inventory without modifying it. Used by the frontend to display the live stock count.
+* **`internal/handler/reserve.go` (HTTP Handler):**  Handles the atomic reserve by calling `AtomicReserve.Run`. Interprets the script's return values: `-2` (sold out) → 429, `-1` (stream failure, rollback done) → 503, and `>=0` (success) → 200 with the remaining stock. No manual compensation logic exists in the Go code.
 * **`internal/handler/reset.go` (Admin Reset):** Exposes a `/reset` endpoint (protected by a query parameter key) that sets the Redis inventory back to 100. This allows the demo to be replayed without restarting the container. The double‑click on the stock number in the UI triggers this endpoint automatically for recruiters.
 * **`internal/worker/consumer.go` (Background Worker):** Auto-initializes the Redis Consumer Group via `XGROUP CREATE`. Uses `XREADGROUP` for blocking reads, writes idempotently to PostgreSQL, and utilizes poison-pill handling (acking malformed JSON to prevent infinite retry loops).
 * **`migrations/001_init.up.sql` (Schema Definition):** Creates the `products` and `orders` tables. Seeds the single product (ID: 1) with `inventory_count = 100`.

@@ -73,8 +73,12 @@ func main() {
 	// Seed Redis inventory (only if not exists)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	// Set inventory to 100 for product 1, but only if key missing (idempotent)
-	rdb.Client.SetNX(ctx, "inventory:product:1", 100, 0)
+// In main.go, after connecting to Redis:
+
+// Seed Redis inventory to 100 (overwrite any stale negative value)
+if err := rdb.Client.Set(ctx, "inventory:product:1", 100, 0).Err(); err != nil {
+    slog.Warn("failed to seed inventory", "error", err)
+}
 
 	// Start background worker
 	consumer := worker.NewConsumer(rdb, pg)

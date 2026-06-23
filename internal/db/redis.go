@@ -13,9 +13,13 @@ import (
 //go:embed decr.lua
 var decrLuaScript string
 
+//go:embed atomic_reserve.lua
+var atomicReserveScript string
+
 type RedisDB struct {
-    Client *redis.Client
-    Decr   *redis.Script
+    Client          *redis.Client
+    Decr            *redis.Script
+    AtomicReserve   *redis.Script   // new
 }
 
 func NewRedis(addr string) (*RedisDB, error) {
@@ -31,7 +35,8 @@ func NewRedis(addr string) (*RedisDB, error) {
     }
     slog.Info("Redis connected")
     return &RedisDB{
-        Client: client,
-        Decr:   redis.NewScript(decrLuaScript),
+        Client:        client,
+        Decr:          redis.NewScript(decrLuaScript),
+        AtomicReserve: redis.NewScript(atomicReserveScript),
     }, nil
 }

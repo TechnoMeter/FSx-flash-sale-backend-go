@@ -4,12 +4,11 @@ import (
     "context"
     "encoding/json"
     "fmt"
-    "log/slog"          
+    "log/slog"
     "net/http"
     "time"
 
     "github.com/google/uuid"
-    "github.com/redis/go-redis/v9"  
     "github.com/sony/gobreaker/v2"
     "github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/db"
     "github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/models"
@@ -30,13 +29,12 @@ type ReserveHandler struct {
     redis    *db.RedisDB
     pg       *db.PostgresDB
     cb       *gobreaker.CircuitBreaker[any]
-    stream   string // Redis stream key
+    stream   string
 }
 
 func NewReserveHandler(redis *db.RedisDB, pg *db.PostgresDB) *ReserveHandler {
-    // Circuit breaker: fail after 5 consecutive errors, reset after 30s
     cb := gobreaker.NewCircuitBreaker[any](gobreaker.Settings{
-        Name:        "redis-eval",
+        Name:        "redis-reserve",
         MaxRequests: 3,
         Interval:    0,
         Timeout:     30 * time.Second,
@@ -60,31 +58,11 @@ func (h *ReserveHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Validate input
     if req.ProductID != 1 || req.UserID == "" {
         http.Error(w, "invalid product or user", http.StatusBadRequest)
         return
     }
 
-    // ---------- 1. Atomic decrement via Lua (with circuit breaker) ----------
-    stockVal, err := h.cb.Execute(func() (any, error) {
-        return h.redis.Decr.Run(ctx, h.redis.Client, []string{fmt.Sprintf("inventory:product:%d", req.ProductID)}).Int64()
-    })
-    if err != nil {
-        // Circuit breaker open or Redis error
-        h.logError(ctx, "redis decr failed", err)
-        http.Error(w, "inventory service temporarily unavailable", http.StatusServiceUnavailable)
-        return
-    }
-    stock := stockVal.(int64)
-
-    if stock == -2 {
-        // Sold out
-        writeJSON(w, http.StatusTooManyRequests, ReserveResponse{Success: false, Message: "sold out"})
-        return
-    }
-
-    // ---------- 2. Generate UUID and push to stream ----------
     orderID := uuid.New()
     order := models.Order{
         ID:        orderID,
@@ -93,22 +71,46 @@ func (h *ReserveHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
     payload, _ := json.Marshal(order)
 
-    // XADD
-    xaddErr := h.redis.Client.XAdd(ctx, &redis.XAddArgs{
-        Stream: h.stream,
-        Values: map[string]interface{}{"order": string(payload)},
-    }).Err()
+    // Atomic: decrement + XADD in one Lua script
+    result, err := h.cb.Execute(func() (any, error) {
+        // Call the new script: keys = [inventory_key], args = [stream_key, order_json]
+        return h.redis.AtomicReserve.Run(ctx, h.redis.Client,
+            []string{fmt.Sprintf("inventory:product:%d", req.ProductID)},
+            h.stream, string(payload),
+        ).Result()
+    })
 
-    if xaddErr != nil {
-        // Compensating rollback: INCR back the stock
-        h.redis.Client.Incr(ctx, fmt.Sprintf("inventory:product:%d", req.ProductID))
-        h.logError(ctx, "xadd failed, rolled back", xaddErr)
-        http.Error(w, "failed to place order", http.StatusInternalServerError)
+    if err != nil {
+        h.logError(ctx, "atomic reserve failed", err)
+        http.Error(w, "inventory service temporarily unavailable", http.StatusServiceUnavailable)
         return
     }
 
-    // ---------- 3. Success ----------
-    writeJSON(w, http.StatusOK, ReserveResponse{Success: true, Stock: stock})
+    // The script returns an array: [stock, msg_id]
+    arr, ok := result.([]interface{})
+    if !ok || len(arr) != 2 {
+        h.logError(ctx, "unexpected script return", fmt.Errorf("%v", result))
+        http.Error(w, "internal error", http.StatusInternalServerError)
+        return
+    }
+
+    stock, _ := arr[0].(int64)
+    //msgID, _ := arr[1].(string)
+
+    switch stock {
+    case -2:
+        // Sold out – script already rolled back
+        writeJSON(w, http.StatusTooManyRequests, ReserveResponse{Success: false, Message: "sold out"})
+        return
+    case -1:
+        // XADD failed – script rolled back
+        h.logError(ctx, "XADD failed, rolled back", nil)
+        http.Error(w, "failed to place order", http.StatusInternalServerError)
+        return
+    default:
+        // Success: stock is the new inventory count, msgID is the stream message ID
+        writeJSON(w, http.StatusOK, ReserveResponse{Success: true, Stock: stock})
+    }
 }
 
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {
