@@ -7,7 +7,7 @@ import (
     "time"
 
     "github.com/jackc/pgx/v5/pgxpool"
-    "github.com/TechnoMeter/flash-sale-backend-go/internal/models"
+    "github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/models"
 )
 
 type PostgresDB struct {

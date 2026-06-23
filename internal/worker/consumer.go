@@ -8,8 +8,8 @@ import (
     "strings"
 
     "github.com/redis/go-redis/v9"
-    "github.com/TechnoMeter/flash-sale-backend-go/internal/db"
-    "github.com/TechnoMeter/flash-sale-backend-go/internal/models"
+    "github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/db"
+    "github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/models"
 )
 
 const (

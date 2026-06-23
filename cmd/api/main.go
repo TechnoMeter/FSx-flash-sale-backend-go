@@ -14,10 +14,10 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/joho/godotenv"
-	"github.com/TechnoMeter/flash-sale-backend-go/internal/db"
-	"github.com/TechnoMeter/flash-sale-backend-go/internal/handler"
-	"github.com/TechnoMeter/flash-sale-backend-go/internal/reconciler"
-	"github.com/TechnoMeter/flash-sale-backend-go/internal/worker"
+	"github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/db"
+	"github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/handler"
+	"github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/reconciler"
+	"github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/worker"
 )
 
 func runMigrations(pg *db.PostgresDB) error {

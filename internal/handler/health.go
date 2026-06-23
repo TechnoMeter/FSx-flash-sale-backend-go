@@ -4,7 +4,7 @@ import (
     "net/http"
     "fmt"
 
-    "github.com/TechnoMeter/flash-sale-backend-go/internal/db"
+    "github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/db"
 )
 
 func HealthCheck(w http.ResponseWriter, r *http.Request) {

@@ -2,7 +2,7 @@
   <!-- Status & License Badges -->
   <img src="https://img.shields.io/badge/Status-Production_Ready-success.svg?style=for-the-badge" alt="Status">
   <img src="https://img.shields.io/badge/Deployed-Railway.app-0B0D0E?style=for-the-badge&logo=railway&logoColor=white" alt="Railway">
-  <img src="https://github.com/TechnoMeter/flash-sale-backend-go/actions/workflows/ci.yml/badge.svg" alt="CI Status">
+  <img src="https://github.com/TechnoMeter/FSx-flash-sale-backend-go/actions/workflows/ci.yml/badge.svg" alt="CI Status">
   
   <br><br>
 
@@ -303,7 +303,7 @@ The repository follows standard Go project layouts, separating business logic fr
 ## 📂 Repository Structure
 
 ```text
-flash-sale/
+FSx-flash-sale-backend-go/
 ├── cmd/
 │   └── api/
 │       └── main.go                 # Entrypoint (seeds Redis, starts worker, mounts routes)

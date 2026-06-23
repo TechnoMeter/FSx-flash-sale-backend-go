@@ -6,7 +6,7 @@ import (
     "log/slog"
 
     "github.com/robfig/cron/v3"
-    "github.com/TechnoMeter/flash-sale-backend-go/internal/db"
+    "github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/db"
 )
 
 type Reconciler struct {

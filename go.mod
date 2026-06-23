@@ -1,4 +1,4 @@
-module github.com/TechnoMeter/flash-sale-backend-go
+module github.com/TechnoMeter/FSx-flash-sale-backend-go
 
 go 1.25
 
