@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -14,8 +15,10 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/joho/godotenv"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/db"
 	"github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/handler"
+	"github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/metrics"
 	"github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/reconciler"
 	"github.com/TechnoMeter/FSx-flash-sale-backend-go/internal/worker"
 )
@@ -33,23 +36,24 @@ func runMigrations(pg *db.PostgresDB) error {
 }
 
 func main() {
-	// Load .env (ignore if not present)
 	_ = godotenv.Load()
 
-	// Setup structured JSON logging
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
-	// Environment variables
 	dbURL := os.Getenv("DATABASE_URL")
 	redisURL := os.Getenv("REDIS_URL")
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-	rateLimitRPS := 10 // default, can read from env
+	rateLimitRPS := 10
+	if rps := os.Getenv("RATE_LIMIT_RPS"); rps != "" {
+		if val, err := strconv.Atoi(rps); err == nil {
+			rateLimitRPS = val
+		}
+	}
 
-	// Connect to PostgreSQL and Redis
 	pg, err := db.NewPostgres(dbURL)
 	if err != nil {
 		slog.Error("failed to connect postgres", "error", err)
@@ -70,65 +74,59 @@ func main() {
 	}
 	defer rdb.Client.Close()
 
-	// Seed Redis inventory (only if not exists)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-// In main.go, after connecting to Redis:
+	if err := rdb.Client.Set(ctx, "inventory:product:1", 100, 0).Err(); err != nil {
+		slog.Warn("failed to seed inventory", "error", err)
+	}
 
-// Seed Redis inventory to 100 (overwrite any stale negative value)
-if err := rdb.Client.Set(ctx, "inventory:product:1", 100, 0).Err(); err != nil {
-    slog.Warn("failed to seed inventory", "error", err)
-}
+	metrics.RegisterAll()
 
-	// Start background worker
 	consumer := worker.NewConsumer(rdb, pg)
 	workerCtx, workerStop := context.WithCancel(context.Background())
 	go consumer.Start(workerCtx)
 
-	// Start reconciler (every 5 min)
 	rec := reconciler.NewReconciler(rdb, pg)
-	rec.Start(context.Background(), "0 */5 * * * *") // every 5 minutes
+	rec.Start(context.Background(), "0 */5 * * * *")
 	defer rec.Stop()
 
-	// HTTP router
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger) // structured logging by chi's logger (or use slog middleware)
+	r.Use(middleware.Logger)
 
-	// Rate limiting per IP (sliding window)
-	r.Use(httprate.LimitByIP(rateLimitRPS, time.Second))
+	// Custom rate limiter that skips if X-Test-Mode header is present
+	rateLimiter := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Header.Get("X-Test-Mode") == "true" {
+				next.ServeHTTP(w, r)
+				return
+			}
+			httprate.LimitByIP(rateLimitRPS, time.Second)(next).ServeHTTP(w, r)
+		})
+	}
+	r.Use(rateLimiter)
 
-	// Health & readiness
 	r.Get("/health", handler.HealthCheck)
 	r.Get("/ready", handler.ReadinessCheck(pg, rdb))
-
-	// Landing page
 	r.Get("/", handler.IndexPage)
-
 	r.Get("/reset", handler.ResetStock(rdb))
-
 	r.Get("/stock", handler.StockHandler(rdb))
+	r.Get("/stats", handler.StatsHandler(pg, rdb))
+	r.Handle("/metrics", promhttp.Handler())
 
-	// Metrics (Prometheus) – we'll use a simple /metrics endpoint for demo
-	r.Get("/metrics", handler.Metrics)
-
-	// Reserve endpoint
 	reserveHandler := handler.NewReserveHandler(rdb, pg)
 	r.Post("/reserve", reserveHandler.ServeHTTP)
 
-	// Server
 	srv := &http.Server{
-		Addr:    ":" + port,
-		Handler: r,
-		// Timeouts to avoid slow clients
+		Addr:         ":" + port,
+		Handler:      r,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}
 
-	// Graceful shutdown
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 
@@ -143,11 +141,9 @@ if err := rdb.Client.Set(ctx, "inventory:product:1", 100, 0).Err(); err != nil {
 	<-stop
 	slog.Info("Shutting down gracefully...")
 
-	// Stop worker and reconciler
 	workerStop()
 	<-consumer.WaitStop()
 
-	// Shutdown HTTP server with timeout
 	ctxShutdown, cancelShutdown := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancelShutdown()
 	if err := srv.Shutdown(ctxShutdown); err != nil {
