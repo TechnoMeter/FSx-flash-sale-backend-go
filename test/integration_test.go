@@ -18,10 +18,10 @@ func TestRaceCondition(t *testing.T) {
 		t.Skip("skipping integration test in CI")
 	}
 
-	// Read reset key from environment (same as in production)
+	// Read reset key from environment
 	resetKey := os.Getenv("RESET_KEY")
 	if resetKey == "" {
-		resetKey = "reset2026" // fallback for local development
+		resetKey = "reset2026"
 	}
 	resetURL := fmt.Sprintf("http://localhost:8080/reset?key=%s", resetKey)
 	resp, err := http.Get(resetURL)
@@ -32,8 +32,19 @@ func TestRaceCondition(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("reset failed with status %d", resp.StatusCode)
 	}
-
 	time.Sleep(100 * time.Millisecond)
+
+	// Verify stock is 100
+	stockResp, err := http.Get("http://localhost:8080/stock")
+	if err != nil {
+		t.Fatalf("failed to get stock: %v", err)
+	}
+	defer stockResp.Body.Close()
+	var stockData map[string]int64
+	if err := json.NewDecoder(stockResp.Body).Decode(&stockData); err != nil {
+		t.Fatalf("failed to decode stock: %v", err)
+	}
+	assert.Equal(t, int64(100), stockData["stock"], "stock should be 100 after reset")
 
 	var wg sync.WaitGroup
 	successes := 0
@@ -41,11 +52,8 @@ func TestRaceCondition(t *testing.T) {
 	mu := sync.Mutex{}
 
 	url := "http://localhost:8080/reserve"
-	totalRequests := 105 // 100 stock + 5 extra to force sold-out
-
-	// Rate limit is 10 RPS by default; we'll send requests with 150ms delay to stay under.
-	// Adjust based on your RATE_LIMIT_RPS env if changed.
-	delay := 150 * time.Millisecond // > 100ms (10 RPS = 100ms between requests)
+	totalRequests := 105
+	delay := 150 * time.Millisecond
 
 	for i := 0; i < totalRequests; i++ {
 		wg.Add(1)
@@ -59,7 +67,6 @@ func TestRaceCondition(t *testing.T) {
 
 			req, _ := http.NewRequest("POST", url, bytes.NewBuffer(data))
 			req.Header.Set("Content-Type", "application/json")
-			// No X-Test-Mode header – rate limit applies.
 
 			client := &http.Client{}
 			resp, err := client.Do(req)
@@ -79,11 +86,23 @@ func TestRaceCondition(t *testing.T) {
 			}
 			mu.Unlock()
 		}(i)
-		time.Sleep(delay) // stagger to avoid rate limit
+		time.Sleep(delay)
 	}
 
 	wg.Wait()
 
 	assert.Equal(t, 100, successes, "should have 100 successful reservations")
 	assert.Equal(t, 5, tooMany, "should have 5 sold-out responses")
+
+	// Final check: Redis stock should be 0
+	stockResp2, err := http.Get("http://localhost:8080/stock")
+	if err != nil {
+		t.Fatalf("failed to get final stock: %v", err)
+	}
+	defer stockResp2.Body.Close()
+	var stockData2 map[string]int64
+	if err := json.NewDecoder(stockResp2.Body).Decode(&stockData2); err != nil {
+		t.Fatalf("failed to decode final stock: %v", err)
+	}
+	assert.Equal(t, int64(0), stockData2["stock"], "final stock should be 0")
 }

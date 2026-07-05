@@ -6,13 +6,8 @@
     <title>⚡ FSx – Flash Sale Showcase</title>
     
     <style>
-        /* --- Global Reset & Base --- */
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0; 
-        }
-
+        /* --- (all styles remain unchanged) --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
             background: radial-gradient(circle at 10% 10%, #003b5c, transparent 50%),
@@ -28,13 +23,10 @@
             padding: 20px;
             color: #fff;
         }
-
         @keyframes auroraBg {
             0% { background-position: 0% 0%; }
             100% { background-position: 100% 100%; }
         }
-
-        /* --- Main Aero Window --- */
         .aero-window {
             width: 100%;
             max-width: 1300px;
@@ -48,7 +40,6 @@
             overflow: hidden;
             padding: 20px 25px 25px;
         }
-
         .aero-window::before {
             content: '';
             position: absolute;
@@ -57,8 +48,6 @@
             pointer-events: none;
             z-index: 1;
         }
-
-        /* --- Titlebar --- */
         .titlebar {
             display: flex;
             justify-content: space-between;
@@ -69,14 +58,12 @@
             position: relative;
             z-index: 2;
         }
-
         .titlebar h2 {
             font-weight: 300;
             font-size: 22px;
             letter-spacing: 0.5px;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
-
         .titlebar .badge {
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -87,8 +74,6 @@
             color: #00ffcc;
             letter-spacing: 1px;
         }
-
-        /* --- Layout Grids --- */
         .dashboard-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -96,14 +81,11 @@
             position: relative;
             z-index: 2;
         }
-
         .column-layout {
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
-
-        /* --- Panel Styles --- */
         .panel {
             background: rgba(0, 0, 0, 0.25);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -112,11 +94,7 @@
             backdrop-filter: blur(10px);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
-
-        .panel-flex-fill {
-            flex: 1;
-        }
-
+        .panel-flex-fill { flex: 1; }
         .panel h3 {
             font-size: 14px;
             text-transform: uppercase;
@@ -125,14 +103,11 @@
             margin-bottom: 14px;
             font-weight: 400;
         }
-
-        /* --- Demo Panel --- */
         .demo-panel {
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
-
         .stock-big {
             text-align: center;
             background: rgba(0, 0, 0, 0.3);
@@ -140,7 +115,6 @@
             padding: 15px 10px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
-
         .stock-big .number {
             font-size: 64px;
             font-weight: 700;
@@ -148,24 +122,20 @@
             text-shadow: 0 0 30px rgba(0, 203, 255, 0.5);
             transition: color 0.2s;
         }
-
         .stock-big .label {
             font-size: 13px;
             color: rgba(255, 255, 255, 0.5);
             letter-spacing: 2px;
         }
-
         .action-row {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
             align-items: center;
         }
-
         .action-row.space-between {
             justify-content: space-between;
         }
-
         .action-row input {
             flex: 1;
             min-width: 120px;
@@ -177,12 +147,9 @@
             font-size: 14px;
             outline: none;
         }
-
         .action-row input:focus {
             border-color: #00aaff;
         }
-
-        /* --- Buttons --- */
         .btn {
             padding: 10px 24px;
             border: none;
@@ -198,7 +165,6 @@
             position: relative;
             overflow: hidden;
         }
-
         .btn::before {
             content: '';
             position: absolute;
@@ -207,34 +173,27 @@
             border-radius: 6px 6px 0 0;
             pointer-events: none;
         }
-
         .btn:hover:not(:disabled) {
             background: linear-gradient(180deg, rgba(0, 203, 255, 0.8) 0%, rgba(0, 117, 148, 0.9) 100%);
             box-shadow: 0 0 20px rgba(0, 173, 216, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.6);
         }
-
         .btn:disabled {
             opacity: 0.5;
             filter: grayscale(50%);
             cursor: not-allowed;
         }
-
         .btn-reset {
             background: linear-gradient(180deg, rgba(200, 150, 50, 0.6) 0%, rgba(120, 80, 20, 0.7) 100%);
         }
-
         .btn-reset:hover:not(:disabled) {
             background: linear-gradient(180deg, rgba(220, 170, 60, 0.8) 0%, rgba(140, 100, 30, 0.9) 100%);
         }
-
         .btn-burst {
             background: linear-gradient(180deg, rgba(200, 50, 50, 0.7) 0%, rgba(120, 20, 20, 0.8) 100%);
         }
-
         .btn-burst:hover:not(:disabled) {
             background: linear-gradient(180deg, rgba(230, 70, 70, 0.8) 0%, rgba(140, 30, 30, 0.9) 100%);
         }
-
         .latency {
             font-size: 14px;
             color: #00ffcc;
@@ -244,21 +203,17 @@
             border-radius: 20px;
             display: inline-block;
         }
-
         .result-message {
             margin-top: 8px;
             font-size: 14px;
             min-height: 1.5em;
             color: #aaa;
         }
-
-        /* --- Metrics Grid --- */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 12px;
         }
-
         .metric-card {
             background: rgba(0, 0, 0, 0.25);
             border-radius: 10px;
@@ -266,18 +221,15 @@
             text-align: center;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
-
         .metric-card .value {
             font-size: 28px;
             font-weight: 600;
             font-family: 'Consolas', monospace;
             line-height: 1.2;
         }
-
         .metric-card.health-card .value {
             font-size: 20px;
         }
-
         .metric-card .label {
             font-size: 11px;
             color: rgba(255, 255, 255, 0.5);
@@ -285,7 +237,6 @@
             letter-spacing: 0.5px;
             margin-top: 4px;
         }
-
         .health-dot {
             display: inline-block;
             width: 10px;
@@ -293,11 +244,8 @@
             border-radius: 50%;
             margin-right: 6px;
         }
-
         .health-dot.green { background: #00ff88; box-shadow: 0 0 8px #00ff88; }
         .health-dot.red { background: #ff4466; box-shadow: 0 0 8px #ff4466; }
-
-        /* --- Log Panel --- */
         .log-container {
             max-height: 150px;
             overflow-y: auto;
@@ -309,20 +257,17 @@
             line-height: 1.6;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
-
         .log-container .log-entry {
             border-bottom: 1px solid rgba(255, 255, 255, 0.03);
             padding: 3px 0;
         }
-
         .log-container .log-entry .time { color: #888; margin-right: 10px; }
         .log-entry.success { color: #00ffcc; }
         .log-entry.soldout { color: #ffaa00; }
+        .log-entry.ratelimit { color: #ff8844; }
         .log-entry.error { color: #ff4466; }
         .log-entry.info { color: #88ccff; }
         .log-entry.worker { color: #cc88ff; }
-
-        /* --- Burst Progress --- */
         .burst-progress {
             margin-top: 10px;
             background: rgba(0, 0, 0, 0.3);
@@ -331,14 +276,12 @@
             overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-
         .burst-progress .bar {
             height: 100%;
             width: 0%;
             background: linear-gradient(90deg, #00aaff, #00ffcc);
             transition: width 0.2s;
         }
-
         .burst-summary {
             display: flex;
             gap: 20px;
@@ -346,14 +289,11 @@
             margin-top: 6px;
             flex-wrap: wrap;
         }
-
-        .burst-summary span { 
-            background: rgba(0, 0, 0, 0.2); 
-            padding: 2px 12px; 
-            border-radius: 12px; 
+        .burst-summary span {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 12px;
+            border-radius: 12px;
         }
-
-        /* --- Architecture SVG --- */
         .arch-diagram {
             margin-top: 10px;
             text-align: center;
@@ -362,37 +302,29 @@
             padding: 10px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
-
         .arch-diagram h3 {
             margin-bottom: 6px;
         }
-
         .arch-diagram svg {
             max-width: 100%;
             height: auto;
         }
-
         .diagram-legend {
             font-size: 11px;
             color: rgba(255, 255, 255, 0.4);
             margin-top: 4px;
         }
-
         .legend-sync { color: #88aaff; }
         .legend-bg { color: #aa88ff; }
         .legend-eventual { color: #66bbaa; }
-
         .system-info-text {
             font-size: 13px;
             color: rgba(255, 255, 255, 0.6);
             line-height: 1.6;
         }
-
-        /* --- Responsive Tweaks --- */
         @media (max-width: 900px) {
             .dashboard-grid { grid-template-columns: 1fr; }
         }
-
         @media (max-width: 600px) {
             .dashboard-grid { gap: 15px; }
             .panel { padding: 12px; }
@@ -409,28 +341,22 @@
     </div>
 
     <div class="dashboard-grid">
-        
-        <!-- LEFT COLUMN: Demo + Log + Diagram -->
+        <!-- LEFT COLUMN -->
         <div class="column-layout">
-            
-            <!-- Demo Panel -->
             <div class="panel demo-panel">
                 <div class="stock-big">
                     <div class="label">📦 Remaining Stock</div>
                     <div class="number" id="stockDisplay">--</div>
                 </div>
-                
                 <div class="action-row">
                     <input type="text" id="userIdInput" placeholder="User ID (optional)" value="demo-user">
                     <button class="btn" id="buyBtn">🔥 Reserve</button>
                     <span class="latency" id="latencyDisplay">-- ms</span>
                 </div>
-                
                 <div class="action-row space-between">
                     <button class="btn btn-reset" id="resetBtn">↻ Reset Stock</button>
                     <button class="btn btn-burst" id="burstBtn">💥 Burst 100</button>
                 </div>
-                
                 <div class="burst-progress" id="burstProgress">
                     <div class="bar" id="burstBar"></div>
                 </div>
@@ -438,18 +364,15 @@
                 <div class="result-message" id="resultMessage"></div>
             </div>
 
-            <!-- Activity Log -->
             <div class="panel">
                 <h3>📋 Activity Log</h3>
                 <div class="log-container" id="logContainer"></div>
             </div>
 
-            <!-- Architecture Diagram -->
             <div class="panel arch-diagram">
                 <h3>⚙️ System Flow</h3>
                 <svg viewBox="0 0 650 140" xmlns="http://www.w3.org/2000/svg">
                     <defs>
-                        <!-- Markers -->
                         <marker id="arrowSync" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
                             <path d="M 0 0 L 10 5 L 0 10 z" fill="#88aaff"/>
                         </marker>
@@ -459,43 +382,28 @@
                         <marker id="arrowEv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
                             <path d="M 0 0 L 10 5 L 0 10 z" fill="#66bbaa"/>
                         </marker>
-
-                        <!-- Drop shadow for nodes -->
                         <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
                             <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
                         </filter>
                     </defs>
-
-                    <!-- Nodes -->
                     <rect x="20" y="48" width="70" height="44" rx="8" fill="#1e2c3a" stroke="#4a8aaa" stroke-width="1.5" filter="url(#shadow)"/>
                     <text x="55" y="74" text-anchor="middle" fill="#cce" font-size="12" font-family="sans-serif">Client</text>
-
                     <rect x="130" y="48" width="60" height="44" rx="8" fill="#1e2c3a" stroke="#4a8aaa" stroke-width="1.5" filter="url(#shadow)"/>
                     <text x="160" y="74" text-anchor="middle" fill="#cce" font-size="12" font-family="sans-serif">LB</text>
-
                     <rect x="230" y="48" width="80" height="44" rx="8" fill="#1e2c3a" stroke="#4a8aaa" stroke-width="1.5" filter="url(#shadow)"/>
                     <text x="270" y="74" text-anchor="middle" fill="#cce" font-size="12" font-family="sans-serif">Go API</text>
-
                     <rect x="360" y="8" width="100" height="48" rx="8" fill="#1e2c3a" stroke="#ffaa44" stroke-width="1.5" filter="url(#shadow)"/>
                     <text x="410" y="27" text-anchor="middle" fill="#fda" font-size="12" font-weight="600" font-family="sans-serif">Redis</text>
                     <text x="410" y="44" text-anchor="middle" fill="#fda" font-size="10" font-family="sans-serif" opacity="0.8">(Lua + Stream)</text>
-
                     <rect x="360" y="88" width="100" height="40" rx="8" fill="#1e2c3a" stroke="#aa88ff" stroke-width="1.5" filter="url(#shadow)"/>
                     <text x="410" y="112" text-anchor="middle" fill="#dac" font-size="12" font-family="sans-serif">Worker</text>
-
                     <rect x="520" y="48" width="100" height="44" rx="8" fill="#1e2c3a" stroke="#66bbaa" stroke-width="1.5" filter="url(#shadow)"/>
                     <text x="570" y="74" text-anchor="middle" fill="#bfe" font-size="12" font-weight="600" font-family="sans-serif">PostgreSQL</text>
-
-                    <!-- Arrows (Connections) -->
                     <line x1="90" y1="70" x2="124" y2="70" stroke="#88aaff" stroke-width="2" marker-end="url(#arrowSync)"/>
                     <line x1="190" y1="70" x2="224" y2="70" stroke="#88aaff" stroke-width="2" marker-end="url(#arrowSync)"/>
-                    
                     <line x1="310" y1="60" x2="354" y2="40" stroke="#88aaff" stroke-width="2" marker-end="url(#arrowSync)"/>
-
                     <line x1="410" y1="56" x2="410" y2="82" stroke="#aa88ff" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrowBg)"/>
-
                     <line x1="460" y1="100" x2="514" y2="80" stroke="#aa88ff" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrowBg)"/>
-
                     <line x1="460" y1="40" x2="514" y2="60" stroke="#66bbaa" stroke-width="1.5" stroke-dasharray="2 4" marker-end="url(#arrowEv)"/>
                     <text x="495" y="42" fill="#66bbaa" font-size="10" text-anchor="middle" opacity="0.8">async</text>
                 </svg>
@@ -507,7 +415,7 @@
             </div>
         </div>
 
-        <!-- RIGHT COLUMN: Metrics -->
+        <!-- RIGHT COLUMN -->
         <div class="column-layout">
             <div class="panel">
                 <h3>📊 Live Metrics</h3>
@@ -542,7 +450,6 @@
                 </div>
             </div>
             
-            <!-- Optional extra info -->
             <div class="panel panel-flex-fill">
                 <h3>ℹ️ System Info</h3>
                 <div class="system-info-text">
@@ -563,7 +470,6 @@
     let resetConfirmTimeout = null;
     const MAX_LOG = 50;
 
-    // DOM refs
     const stockDisplay = document.getElementById('stockDisplay');
     const buyBtn = document.getElementById('buyBtn');
     const resetBtn = document.getElementById('resetBtn');
@@ -575,7 +481,6 @@
     const burstBar = document.getElementById('burstBar');
     const burstSummary = document.getElementById('burstSummary');
 
-    // Metrics refs
     const mStock = document.getElementById('mStock');
     const mPGOrders = document.getElementById('mPGOrders');
     const mStreamLen = document.getElementById('mStreamLen');
@@ -612,7 +517,7 @@
         }
     }
 
-    // --- Reserve ---
+    // --- Reserve (single) ---
     async function reserve() {
         const userId = userIdInput.value.trim() || 'demo-user';
         buyBtn.disabled = true;
@@ -628,19 +533,39 @@
             const latency = Math.round(end - start);
             latencyDisplay.textContent = latency + ' ms';
 
-            const data = await res.json();
             if (res.status === 200) {
+                const data = await res.json();
                 stock = data.stock;
                 stockDisplay.textContent = stock;
                 addLog(`✅ Order placed – stock now ${stock} (${latency}ms)`, 'success');
                 resultMsg.textContent = `✅ Success! Stock: ${stock}`;
                 resultMsg.style.color = '#00ffcc';
             } else if (res.status === 429) {
-                addLog(`❌ Sold out – attempt blocked (${latency}ms)`, 'soldout');
-                resultMsg.textContent = '❌ Sold out!';
-                resultMsg.style.color = '#ffaa00';
+                // 429 can be either sold out OR rate limited.
+                // Try to parse JSON; if fails, it's plain text (rate limited).
+                let text = await res.text();
+                try {
+                    const json = JSON.parse(text);
+                    if (json.message === 'sold out') {
+                        addLog(`🚫 Sold out – stock is 0 (${latency}ms)`, 'soldout');
+                        resultMsg.textContent = '🚫 Sold out!';
+                        resultMsg.style.color = '#ffaa00';
+                    } else {
+                        // Fallback: unknown JSON message
+                        addLog(`⏳ Rate limited – please wait (${latency}ms)`, 'ratelimit');
+                        resultMsg.textContent = '⏳ Too many requests, please wait.';
+                        resultMsg.style.color = '#ff8844';
+                    }
+                } catch {
+                    // Plain text response from rate limiter
+                    addLog(`⏳ Rate limited – please wait (${latency}ms)`, 'ratelimit');
+                    resultMsg.textContent = '⏳ Too many requests, please wait.';
+                    resultMsg.style.color = '#ff8844';
+                }
             } else {
-                addLog(`⚠️ Error ${res.status}: ${data.message || ''}`, 'error');
+                // Other errors (5xx, 4xx)
+                const data = await res.json().catch(() => ({ message: 'Unknown error' }));
+                addLog(`⚠️ Error ${res.status}: ${data.message || 'Unknown'}`, 'error');
                 resultMsg.textContent = `⚠️ Error: ${data.message || res.status}`;
                 resultMsg.style.color = '#ff4466';
             }
@@ -654,7 +579,6 @@
 
     // --- Reset ---
     async function resetStock() {
-        // Soft confirm mechanism (No native confirm() dialogs)
         if (resetBtn.textContent !== '⚠️ Sure?') {
             resetBtn.textContent = '⚠️ Sure?';
             resetBtn.style.background = 'linear-gradient(180deg, rgba(200,50,50,0.8) 0%, rgba(150,20,20,0.9) 100%)';
@@ -664,7 +588,6 @@
             }, 3000);
             return;
         }
-
         clearTimeout(resetConfirmTimeout);
         resetBtn.textContent = '↻ Reset Stock';
         resetBtn.style.background = '';
@@ -679,20 +602,24 @@
                 await fetchStock();
             } else {
                 addLog(`⚠️ Reset failed: ${data.error || res.status}`, 'error');
+                resultMsg.textContent = `⚠️ Reset failed: ${data.error || res.status}`;
+                resultMsg.style.color = '#ff4466';
             }
         } catch (e) {
             addLog(`⚠️ Reset error: ${e.message}`, 'error');
+            resultMsg.textContent = `⚠️ Reset error: ${e.message}`;
+            resultMsg.style.color = '#ff4466';
         }
     }
 
-    // --- Burst 100 concurrent ---
+    // --- Burst 100 ---
     async function burst() {
         const userIdBase = userIdInput.value.trim() || 'demo-user';
         burstBtn.disabled = true;
         const total = 100;
         let completed = 0;
-        let success = 0, soldout = 0, errors = 0;
-        
+        let success = 0, soldout = 0, ratelimited = 0, errors = 0;
+
         burstBar.style.width = '0%';
         burstSummary.innerHTML = '';
 
@@ -704,8 +631,28 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ product_id: 1, user_id: userId })
             }).then(res => {
-                return res.json().then(data => ({ status: res.status, data }));
-            }).catch(() => ({ status: 500, data: null }));
+                // Determine type based on status and body.
+                if (res.status === 200) {
+                    return res.json().then(data => ({ status: 200, type: 'success', data }));
+                } else if (res.status === 429) {
+                    // Try to parse JSON; if fails, it's rate limit.
+                    return res.text().then(text => {
+                        try {
+                            const json = JSON.parse(text);
+                            if (json.message === 'sold out') {
+                                return { status: 429, type: 'soldout', data: json };
+                            } else {
+                                return { status: 429, type: 'ratelimit', data: null };
+                            }
+                        } catch {
+                            return { status: 429, type: 'ratelimit', data: null };
+                        }
+                    });
+                } else {
+                    // Other status: treat as error
+                    return res.json().catch(() => ({})).then(data => ({ status: res.status, type: 'error', data }));
+                }
+            }).catch(() => ({ status: 500, type: 'error', data: null }));
             promises.push(p);
         }
 
@@ -715,26 +662,30 @@
             const pct = Math.round((completed / total) * 100);
             burstBar.style.width = pct + '%';
             
-            if (r.status === 200) success++;
-            else if (r.status === 429) soldout++;
+            if (r.type === 'success') success++;
+            else if (r.type === 'soldout') soldout++;
+            else if (r.type === 'ratelimit') ratelimited++;
             else errors++;
         }
+
+        // Update stock after burst
+        await fetchStock();
 
         burstSummary.innerHTML = `
             <span>✅ Success: ${success}</span>
             <span>🚫 Sold out: ${soldout}</span>
+            <span>⏳ Rate limited: ${ratelimited}</span>
             <span>⚠️ Errors: ${errors}</span>
         `;
-        addLog(`💥 Burst completed – ${success} success, ${soldout} sold out, ${errors} errors`, 'info');
-        resultMsg.textContent = `Burst done: ${success} OK, ${soldout} sold out`;
+        addLog(`💥 Burst completed – ${success} OK, ${soldout} sold, ${ratelimited} rate-limited, ${errors} errors`, 'info');
+        resultMsg.textContent = `Burst done: ${success} OK, ${soldout} sold out, ${ratelimited} rate-limited`;
         resultMsg.style.color = '#88ccff';
-        await fetchStock();
-        
+
         burstBtn.disabled = false;
         setTimeout(() => { burstBar.style.width = '0%'; }, 3000);
     }
 
-    // --- Fetch Stats (metrics) ---
+    // --- Fetch Stats ---
     async function fetchStats() {
         try {
             const res = await fetch('/stats');
@@ -747,32 +698,26 @@
             mPending.textContent = stats.pendingCount ?? '--';
             mWorkerProc.textContent = stats.workerProcessed ?? '--';
 
-            // Health
             if (stats.health) {
                 pgDot.className = 'health-dot ' + (stats.health.postgres ? 'green' : 'red');
                 redisDot.className = 'health-dot ' + (stats.health.redis ? 'green' : 'red');
             }
         } catch (e) {
-            // Ignore background fetch errors silently in UI
+            // ignore
         }
     }
 
-    // --- Initialise ---
+    // --- Init ---
     async function init() {
         await fetchStock();
         addLog('🚀 FSx dashboard ready', 'info');
-        
-        // Start periodic updates
         setInterval(fetchStock, 2000);
         setInterval(fetchStats, 1500);
         
-        // Event listeners
         buyBtn.addEventListener('click', reserve);
         resetBtn.addEventListener('click', resetStock);
         burstBtn.addEventListener('click', burst);
-        userIdInput.addEventListener('keydown', (e) => { 
-            if (e.key === 'Enter') reserve(); 
-        });
+        userIdInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') reserve(); });
     }
 
     init();
