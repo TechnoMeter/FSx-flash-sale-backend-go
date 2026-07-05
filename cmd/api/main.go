@@ -104,7 +104,7 @@ func main() {
 	r.Get("/health", handler.HealthCheck)
 	r.Get("/ready", handler.ReadinessCheck(pg, rdb))
 	r.Get("/", handler.IndexPage)
-	r.Get("/reset", handler.ResetStock(rdb))          // now reads RESET_KEY from env
+	r.Get("/reset", handler.ResetStock(rdb, pg))  // now needs pg
 	r.Get("/stock", handler.StockHandler(rdb))
 	r.Get("/stats", handler.StatsHandler(pg, rdb))
 	r.Handle("/metrics", promhttp.Handler())
