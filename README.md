@@ -353,7 +353,7 @@ PORT=8080
 RESET_KEY=your-strong-secret-here
 ```
 
-### 3. Local Development Setup
+### 3. Local Development Setup 
 **Step 1: Boot Dependencies via Docker Compose**
 ```bash
 docker-compose up -d
