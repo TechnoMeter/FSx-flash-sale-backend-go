@@ -27,7 +27,7 @@
 
 This project is a fully containerized, horizontally-scalable microservice actively deployed on **Railway.app**. The infrastructure leverages Railway’s internal networking to securely connect the Go application, Redis, and PostgreSQL without exposing data layers to the public internet.
 
-👉 **[Access the Live Interactive Demo Here](fsx-flash-sale-backend-go.up.railway.app)**  
+👉 **[Access the Live Interactive Demo Here](https://fsx-flash-sale-backend-go.up.railway.app)**  
 
 The demo features a **dashboard** with:
 - **Live stock display** – double‑click to reset to 100 units.
