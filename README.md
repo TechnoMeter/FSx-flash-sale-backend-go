@@ -27,7 +27,7 @@
 
 This project is a fully containerized, horizontally-scalable microservice actively deployed on **Railway.app**. The infrastructure leverages Railway’s internal networking to securely connect the Go application, Redis, and PostgreSQL without exposing data layers to the public internet.
 
-👉 **[Access the Live Interactive Demo Here](https://fsx-flash-sale-backend-go.up.railway.app)**  
+👉 **[Access the Live Interactive Demo Here](https://<YOUR_HOSTED_APP_URL>)**  
 
 The demo features a **dashboard** with:
 - **Live stock display** – double‑click to reset to 100 units.
@@ -385,8 +385,8 @@ Open your browser and visit `http://localhost:8080`. You’ll see the interactiv
 
 **Alternative – Test with cURL:**
 ```bash
-curl -X POST http://localhost:8080/reserve \
-  -H "Content-Type: application/json" \
+curl -X POST http://localhost:8080/reserve \\
+  -H "Content-Type: application/json" \\
   -d '{"product_id": 1, "user_id": "test-user"}'
 ```
 Expected Response:
